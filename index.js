@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 require('dotenv').config();
 const port = process.env.PORT || 5000;
@@ -26,9 +26,62 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
+    const spotCollection = client.db('spotDB').collection('spot');
 
-   
+  app.post('/addSpot', async(req, res) => {
+    const newSpot = req.body;
+    console.log(newSpot);
+    const result = await spotCollection.insertOne(newSpot);
+    res.send(result);
+  })
 
+  app.get('/allSpot', async(req, res) => {
+    const cursor = spotCollection.find();
+    const result = await cursor.toArray();
+    res.send(result);
+  })
+
+  app.put('/allSpot/:id', async(req, res) => {
+    const id = req.params.id;
+    const filter = {_id: new ObjectId(id)}
+    const options = { upsert: true };
+    const updatedSpot = req.body;
+    const spot = {
+      $set: {
+        spotName: updatedSpot.name, 
+        location: updatedSpot.location, 
+        cost: updatedSpot.cost, 
+        description: updatedSpot.description, 
+        travelTime: updatedSpot.travelTime, 
+        visitors: updatedSpot.visitors, 
+        season: updatedSpot.season, 
+        img: updatedSpot.img
+      }
+    }
+    const result = await spotCollection.updateOne(filter, spot, options);
+    res.send(result);
+  })
+  
+  app.delete('/allSpot/:id', async(req, res) => {
+    const id = req.params.id;
+    const query = {_id: new ObjectId(id)}
+    const result = await spotCollection.deleteOne(query);
+    res.send(result);
+  })
+
+  app.get('/allSpot/:id', async(req, res) => {
+    const id = req.params.id;
+    const query = {_id: new ObjectId(id)}
+    const result = await spotCollection.findOne(query);
+    res.send(result);
+  })
+
+  app.get('/myList/:email', async(req, res) => {
+    console.log(req.params.email);
+    const result = await spotCollection.find({ email:
+      req.params.email }).toArray();
+    res.send(result);
+  })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
@@ -42,10 +95,10 @@ run().catch(console.dir);
 
 
 app.get('/', (req, res) => {
-    res.send('Assignment ten server side is running on...')
+    res.send('Assignment ten server side is run...')
 })
 
-app.listen(port, () => {console.log(`Coffee shop is running http://localhost:${5000}`)});
+app.listen(port, () => {console.log(`Assignment server is running on http://localhost:${5000}`)});
 
 // app.listen(port, () => {
 //   console.log(`Assignment ten is running on port: ${port}`)
