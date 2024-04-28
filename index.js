@@ -43,8 +43,16 @@ async function run() {
   })
 
   app.get('/allSpot', async(req, res) => {
-    const cursor = spotCollection.find();
+    const {cost} = req.query;
+    const cursor = spotCollection.find().sort({cost: cost || 'desc'});
     const result = await cursor.toArray();
+    res.send(result);
+  })
+
+  app.get('/allSpot/countries/:country', async(req, res)=> {
+    console.log(req.params.email);
+    const result = await spotCollection.find({ country:
+      req.params.country }).toArray();
     res.send(result);
   })
 
